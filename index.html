@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Chat App</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            display: flex;
+            gap: 20px;
+        }
+        #users {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 150px;
+            height: 300px;
+            overflow-y: auto;
+        }
+        #messages {
+            list-style: none;
+            padding: 0;
+            height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 300px;
+        }
+        #form {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div>
+        <h3>Online Users</h3>
+        <ul id="users"></ul>
+    </div>
+
+    <div>
+        <h1>Chat</h1>
+        <ul id="messages"></ul>
+
+        <form id="form">
+            <input id="input" autocomplete="off" />
+            <button>Send</button>
+        </form>
+    </div>
+
+    <script>
+        const socket = io();
+
+        // Ask for username
+        const username = prompt("Enter your name:");
+        socket.emit("set username", username);
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+
+        // Send message
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', { user: username, text: input.value });
+                input.value = '';
+            }
+        });
+
+        // Receive message
+        socket.on("chat message", function(msg) {
+            const item = document.createElement("li");
+            item.textContent = msg.user + ": " + msg.text;
+            messages.appendChild(item);
+        });
+
+        // Update online users
+        socket.on("users", function(list) {
+            const usersList = document.getElementById("users");
+            usersList.innerHTML = "";
+            list.forEach(function(name) {
+                const item = document.createElement("li");
+                item.textContent = name;
+                usersList.appendChild(item);
+            });
+        });
+    </script>
+
+</body>
+</html>
